@@ -1,47 +1,53 @@
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
-import { store } from "./store";
-import { useEffect, useReducer } from "react";
+import { CounterId, RootState, store } from "./store";
+import { useEffect, useReducer, useRef } from "react";
 
 function App() {
+  return (
+    <>
+      <Counter id={"1"} />
+      <Counter id={"2"} />
+      <Counter id={"3"} />
+    </>
+  );
+}
+
+const selector = (state: RootState, id: CounterId) => state.counters[id];
+
+const Counter = ({ id }: { id: CounterId }) => {
   const [, updateState] = useReducer((x) => x + 1, 0);
+
+  const prevStateRef = useRef<ReturnType<typeof selector>>();
 
   useEffect(() => {
     const unsubscribe = store.subscribe(() => {
-      updateState();
+      const currentState = selector(store.getState(), id);
+      const prevState = prevStateRef.current;
+      if (currentState !== prevState) {
+        updateState();
+      }
+
+      prevStateRef.current = currentState;
     });
+
     return () => unsubscribe();
   }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <p>count {store.getState().counter}</p>
-        <button onClick={() => store.dispatch({ type: "increment" })}>
-          Increment
-        </button>
-        <button onClick={() => store.dispatch({ type: "decrement" })}>
-          Decrement
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="card">
+      <p>count {selector(store.getState(), id)?.counter}</p>
+      <button
+        onClick={() => store.dispatch({ type: "increment", payload: id })}
+      >
+        Increment
+      </button>
+      <button
+        onClick={() => store.dispatch({ type: "decrement", payload: id })}
+      >
+        Decrement
+      </button>
+    </div>
   );
-}
+};
 
 export default App;

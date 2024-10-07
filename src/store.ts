@@ -1,34 +1,53 @@
 import { configureStore } from "@reduxjs/toolkit";
 
-type State = {
+type CounterState = {
   counter: number;
 };
 
+export type CounterId = string;
+
+type State = { counters: Record<CounterId, CounterState | undefined> };
+
 type ActionIncrement = {
   type: "increment";
+  payload: CounterId;
 };
 
 type ActionDecrement = {
   type: "decrement";
+  payload: CounterId;
 };
 
 type Action = ActionIncrement | ActionDecrement;
 
-const initialState: State = {
+const initialCounterState: CounterState = {
   counter: 0,
 };
 
+const initialState: State = {
+  counters: {},
+};
+
 const reducer = (state = initialState, action: Action) => {
+  const counterId = action.payload;
+  const currentCounter = state.counters[counterId] ?? initialCounterState;
+
   switch (action.type) {
     case "increment":
       return {
         ...state,
-        counter: state.counter + 1,
+        counters: {
+          ...state.counters,
+          [counterId]: { counter: currentCounter.counter + 1 },
+        },
       };
     case "decrement":
       return {
         ...state,
-        counter: state.counter - 1,
+        counters: {
+          ...state.counters,
+          [counterId]: { counter: currentCounter.counter - 1 },
+        },
       };
     default:
       return state;
