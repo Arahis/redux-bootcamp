@@ -1,7 +1,7 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore, createSelector } from "@reduxjs/toolkit";
 import { useDispatch, useSelector, useStore } from "react-redux";
 
-type UserID = string;
+export type UserID = string;
 
 export type User = {
   id: UserID;
@@ -157,10 +157,11 @@ store.dispatch({
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
-export type RootState = ReturnType<typeof store.getState>;
+export type AppState = ReturnType<typeof store.getState>;
 // Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
 export type AppDispatch = typeof store.dispatch;
 
-export const useAppSelector = useSelector.withTypes<RootState>();
+export const useAppSelector = useSelector.withTypes<AppState>();
 export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
 export const useAppStore = useStore.withTypes<typeof store>();
+export const createAppSelector = createSelector.withTypes<AppState>();

@@ -1,48 +1,61 @@
-import { useState } from "react";
-import { useAppDispatch, useAppSelector, User } from "../../store";
+import { memo, useState } from "react";
+import {
+  AppState,
+  createAppSelector,
+  useAppDispatch,
+  useAppSelector,
+  UserID,
+} from "../../store";
+
+const selectSortedUsers = createAppSelector(
+  (state: AppState) => state.users.ids,
+  (state: AppState) => state.users.entities,
+  (_: AppState, sortType: "asc" | "desc") => sortType,
+  (ids, userEntities, sortType) =>
+    ids
+      .map((id) => userEntities[id])
+      .sort((a, b) => {
+        if (sortType === "asc") {
+          return a.name.localeCompare(b.name);
+        } else {
+          return b.name.localeCompare(a.name);
+        }
+      })
+);
+
+const selectSelectedUser = (state: AppState) =>
+  state.users.selectedUserId ? state.users.selectedUserId : undefined;
 
 const UserList = () => {
   const [sortType, setSortType] = useState<"asc" | "desc">("asc");
 
-  const ids = useAppSelector((state) => state.users.ids);
-  const userEntities = useAppSelector((state) => state.users.entities);
+  const selectedUserID = useAppSelector(selectSelectedUser);
 
-  const selectedUser = useAppSelector((state) =>
-    state.users.selectedUserId
-      ? userEntities[state.users.selectedUserId]
-      : undefined
+  const sortedUsers = useAppSelector((state) =>
+    selectSortedUsers(state, sortType)
   );
-
-  const sortedUsers = ids
-    .map((id) => userEntities[id])
-    .sort((a, b) => {
-      if (sortType === "asc") {
-        return a.name.localeCompare(b.name);
-      } else {
-        return b.name.localeCompare(a.name);
-      }
-    });
 
   return (
     <div>
-      {!selectedUser ? (
+      {!selectedUserID ? (
         <div>
           <button onClick={() => setSortType("asc")}>Asc</button>
           <button onClick={() => setSortType("desc")}>Desc</button>
           <ul>
             {sortedUsers.map((user) => (
-              <UserListItem key={user.id} user={user} />
+              <UserListItem key={user.id} userId={user.id} />
             ))}
           </ul>
         </div>
       ) : (
-        <SelectedUser user={selectedUser} />
+        <SelectedUser userId={selectedUserID} />
       )}
     </div>
   );
 };
 
-const UserListItem = ({ user }: { user: User }) => {
+const UserListItem = memo(({ userId }: { userId: UserID }) => {
+  const user = useAppSelector((state) => state.users.entities[userId]);
   const dispatch = useAppDispatch();
 
   const handleUserClick = () => {
@@ -54,9 +67,10 @@ const UserListItem = ({ user }: { user: User }) => {
       <span>{user.name}</span>
     </li>
   );
-};
+});
 
-const SelectedUser = ({ user }: { user: User }) => {
+const SelectedUser = ({ userId }: { userId: UserID }) => {
+  const user = useAppSelector((state) => state.users.entities[userId]);
   const dispatch = useAppDispatch();
 
   const handleBackButtonClick = () => {
