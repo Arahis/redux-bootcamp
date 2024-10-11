@@ -1,5 +1,37 @@
-import { configureStore, createSelector } from "@reduxjs/toolkit";
+import {
+  combineReducers,
+  configureStore,
+  createSelector,
+} from "@reduxjs/toolkit";
 import { useDispatch, useSelector, useStore } from "react-redux";
+
+export type CounterId = string;
+
+type CounterState = {
+  counter: number;
+};
+
+type CountersState = Record<CounterId, CounterState | undefined>;
+
+type ActionIncrement = {
+  type: "increment";
+  payload: {
+    counterId: CounterId;
+  };
+};
+
+type ActionDecrement = {
+  type: "decrement";
+  payload: { counterId: CounterId };
+};
+
+const initialCounterState: CounterState = {
+  counter: 0,
+};
+
+const initialCountersState: CountersState = {};
+
+// USER STATE
 
 export type UserID = string;
 
@@ -21,17 +53,6 @@ type UserState = {
   selectedUserId: UserID | undefined;
 };
 
-export type CounterId = string;
-
-type CounterState = {
-  counter: number;
-};
-
-type State = {
-  counters: Record<CounterId, CounterState | undefined>;
-  users: UserState;
-};
-
 type UserSelectedaction = {
   type: "userSelected";
   payload: {
@@ -50,16 +71,10 @@ type UserStoredAction = {
   };
 };
 
-type ActionIncrement = {
-  type: "increment";
-  payload: {
-    counterId: CounterId;
-  };
-};
-
-type ActionDecrement = {
-  type: "decrement";
-  payload: { counterId: CounterId };
+const initialUserState: UserState = {
+  entities: {},
+  ids: [],
+  selectedUserId: undefined,
 };
 
 type Action =
@@ -69,81 +84,65 @@ type Action =
   | UserRemoveSelectedAction
   | UserStoredAction;
 
-const initialUserState: UserState = {
-  entities: {},
-  ids: [],
-  selectedUserId: undefined,
-};
-
-const initialCounterState: CounterState = {
-  counter: 0,
-};
-
-const initialState: State = {
-  counters: {},
-  users: initialUserState,
-};
-
-const reducer = (state = initialState, action: Action) => {
+const usersReducer = (state = initialUserState, action: Action) => {
   switch (action.type) {
-    case "increment": {
-      const { counterId } = action.payload;
-      const currentCounter = state.counters[counterId] ?? initialCounterState;
-      return {
-        ...state,
-        counters: {
-          ...state.counters,
-          [counterId]: { counter: currentCounter.counter + 1 },
-        },
-      };
-    }
-    case "decrement": {
-      const { counterId } = action.payload;
-      const currentCounter = state.counters[counterId] ?? initialCounterState;
-      return {
-        ...state,
-        counters: {
-          ...state.counters,
-          [counterId]: { counter: currentCounter.counter - 1 },
-        },
-      };
-    }
     case "userSelected": {
       return {
         ...state,
-        users: {
-          ...state.users,
-          selectedUserId: action.payload.userId,
-        },
+        selectedUserId: action.payload.userId,
       };
     }
     case "userRemoveSelected": {
       return {
         ...state,
-        users: {
-          ...state.users,
-          selectedUserId: undefined,
-        },
+        selectedUserId: undefined,
       };
     }
     case "userStored": {
       const { users } = action.payload;
       return {
         ...state,
-        users: {
-          ...state.users,
-          entities: users.reduce((acc, user) => {
-            acc[user.id] = user;
-            return acc;
-          }, {} as Record<UserID, User>),
-          ids: users.map((user) => user.id),
-        },
+        entities: users.reduce((acc, user) => {
+          acc[user.id] = user;
+          return acc;
+        }, {} as Record<UserID, User>),
+        ids: users.map((user) => user.id),
       };
     }
     default:
       return state;
   }
 };
+const counterReducer = (
+  state = initialCountersState,
+  action: Action
+): CountersState => {
+  switch (action.type) {
+    case "increment": {
+      const { counterId } = action.payload;
+      const currentCounter = state[counterId] ?? initialCounterState;
+      return {
+        ...state,
+        [counterId]: { counter: currentCounter.counter + 1 },
+      };
+    }
+    case "decrement": {
+      const { counterId } = action.payload;
+      const currentCounter = state[counterId] ?? initialCounterState;
+      return {
+        ...state,
+        [counterId]: { counter: currentCounter.counter - 1 },
+      };
+    }
+    default:
+      return state;
+  }
+};
+
+const reducer = combineReducers({
+  users: usersReducer,
+  counters: counterReducer,
+});
 
 export const store = configureStore({
   reducer,
