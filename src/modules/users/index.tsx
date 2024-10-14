@@ -1,30 +1,6 @@
 import { memo, useState } from "react";
-import {
-  AppState,
-  createAppSelector,
-  useAppDispatch,
-  useAppSelector,
-  UserID,
-} from "../../store";
-
-const selectSortedUsers = createAppSelector(
-  (state: AppState) => state.users.ids,
-  (state: AppState) => state.users.entities,
-  (_: AppState, sortType: "asc" | "desc") => sortType,
-  (ids, userEntities, sortType) =>
-    ids
-      .map((id) => userEntities[id])
-      .sort((a, b) => {
-        if (sortType === "asc") {
-          return a.name.localeCompare(b.name);
-        } else {
-          return b.name.localeCompare(a.name);
-        }
-      })
-);
-
-const selectSelectedUser = (state: AppState) =>
-  state.users.selectedUserId ? state.users.selectedUserId : undefined;
+import { useAppDispatch, useAppSelector } from "../../store.utils";
+import { selectSelectedUser, selectSortedUsers, UserID } from "./users.slice";
 
 const UserList = () => {
   const [sortType, setSortType] = useState<"asc" | "desc">("asc");

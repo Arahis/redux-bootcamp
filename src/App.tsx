@@ -1,6 +1,6 @@
 import "./App.css";
-import Counter from "./components/counter";
-import UserList from "./components/users-list";
+import Counter from "./modules/counters";
+import UserList from "./modules/users";
 
 function App() {
   return (

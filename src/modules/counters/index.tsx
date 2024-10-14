@@ -1,8 +1,9 @@
-import { CounterId, useAppDispatch, useAppSelector } from "../../store";
+import { useAppDispatch, useAppSelector } from "../../store.utils";
+import { CounterID, selectCounter } from "./counters.slice";
 
-const Counter = ({ id }: { id: CounterId }) => {
+const Counter = ({ id }: { id: CounterID }) => {
   const dispatch = useAppDispatch();
-  const counter = useAppSelector((state) => state.counters[id]);
+  const counter = useAppSelector((state) => selectCounter(state, id));
 
   return (
     <div className="card">
